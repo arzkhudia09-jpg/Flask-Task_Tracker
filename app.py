@@ -1,9 +1,12 @@
 from flask import Flask, render_template, request, redirect
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import os
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///tasks.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
+    "DATABASE_URL", "sqlite:///tasks.db"  # fallback for local dev
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
 
@@ -29,9 +32,10 @@ def home():
         db.session.add(task)
         db.session.commit()
         return redirect("/")
-    
+
     allTasks = Task.query.all()
     return render_template("index.html", allTasks=allTasks)
+
 
 @app.route("/update/<int:sno>", methods=["GET", "POST"])
 def update(sno):
@@ -49,18 +53,15 @@ def update(sno):
     return render_template("update.html", task=task)
 
 
-
 @app.route("/delete/<int:sno>")
 def delete(sno):
     task = Task.query.filter_by(sno=sno).first()
     if task is None:
         return "Task not found", 404
-    
+
     db.session.delete(task)
     db.session.commit()
     return redirect("/")
-
-
 
 
 if __name__ == "__main__":
