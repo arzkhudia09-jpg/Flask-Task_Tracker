@@ -1,0 +1,56 @@
+<!-- extended from base.html -->
+{% extends 'base.html' %}
+
+<!-- titlt -->
+{% block title %} Home- {% endblock title %}
+
+<!-- body -->
+{% block body %}
+<!-- TODO Add tasks -->
+<div class="add_task">
+    <h2>Add Task</h2>
+    <form action="/" method="POST">
+        <input type="text" name="title" placeholder="Enter your Task-Title here" required>
+        <input type="text" name="desc" placeholder="Enter your Task-Description here" required>
+        <button type="submit">Add</button>
+    </form>
+</div>
+
+<!-- Recently added tasks -->
+<section class="recent_tasks">
+    <h2>Recently Added</h2>
+    <div class="task_table">
+        <div class="task_row task_header">
+            <div class="task_cell">SNo</div>
+            <div class="task_cell">Title</div>
+            <div class="task_cell">Description</div>
+            <div class="task_cell">Time Created</div>
+            <div class="task_cell">Actions</div>
+        </div>
+        <ul class="task_list">
+            {% if allTasks %}
+            {% for task in allTasks %}
+            <li class="task_row">
+                <div class="task_cell">{{ loop.index }}</div>
+                <div class="task_cell">{{ task.title }}</div>
+                <div class="task_cell">{{ task.desc }}</div>
+                <div class="task_cell">{{ task.date_created }}</div>
+                <div class="task_cell">
+                    <div class="task_actions">
+                        <a href="/update/{{task.sno}}" method="GET" type="button" class="btn btn_done">Update</a>
+                            <a href="/delete/{{task.sno}}" method="POST" type="button" class="btn btn_delete">Delete</a>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+            {% else %}
+            <li class="task_row task_empty">
+                <div class="task_cell" aria-live="polite">No recent tasks.</div>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</section>
+
+
+{% endblock body %}

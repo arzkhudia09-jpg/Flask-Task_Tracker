@@ -1,0 +1,30 @@
+<!-- Makimg a TODO task web app -->
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} {% endblock title %}TODO</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <!-- TODO navbar -->
+    <nav class="navbar">
+        <h1 class="logo"><a href="/">TODO</a></h1>
+        <ul id="nav_element">
+            <li class="nav_element"><a href="/">Home</a></li>
+            <li class="nav_element"><a href="/done">Done</a></li>
+            <li class="nav_element"><a href="/pending">Pending</a></li>
+            <li class="nav_element"><a href="/update">Update</a></li>
+        </ul>
+    </nav>
+    {% block body %}
+
+    {% endblock body %}
+
+</body>
+
+</html>
