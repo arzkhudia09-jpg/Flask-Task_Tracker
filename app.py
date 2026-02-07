@@ -49,21 +49,22 @@ class Task(db.Model):
 # User registration route
 @app.route("/register", methods=["GET", "POST"])
 def register():
+    error = None
     if request.method == "POST":
         username = request.form["username"]
         password = request.form["password"]
 
         if User.query.filter_by(username=username).first():
-            return "User already exists"
+            error = "User already exists"
+        else:
+            user = User(username=username)
+            user.set_password(password)
 
-        user = User(username=username)
-        user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            return redirect("/login")
 
-        db.session.add(user)
-        db.session.commit()
-        return redirect("/login")
-
-    return render_template("register.html")
+    return render_template("register.html", error=error)
 
 # Login route
 @app.route("/login", methods=["GET", "POST"])
