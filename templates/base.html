@@ -19,6 +19,9 @@
             <li class="nav_element"><a href="/done">Done</a></li>
             <li class="nav_element"><a href="/pending">Pending</a></li>
             <li class="nav_element"><a href="/update">Update</a></li>
+            {% if session.get("user_id") %}
+            <li class="nav_element"><a href="/logout">Logout</a></li>
+            {% endif %}
         </ul>
     </nav>
     {% block body %}

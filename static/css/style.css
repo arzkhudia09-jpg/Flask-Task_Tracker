@@ -104,6 +104,13 @@ a{
     transition: background-color 0.3s ease;
 }
 
+.form_actions{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
 .add_task button:hover{
     background-color: #4338ca;
 }
@@ -162,6 +169,7 @@ a{
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.3s ease;
 }
 
 .btn_done{
@@ -180,6 +188,30 @@ a{
 
 .btn_delete:hover{
     background-color: #dc2626;
+}
+
+.btn_primary{
+    background-color: #111827;
+    color: #fff;
+    padding: 10px 16px;
+}
+
+.btn_primary:hover{
+    background-color: #0b1220;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(17, 24, 39, 0.25);
+}
+
+.btn_secondary{
+    background-color: #e5e7eb;
+    color: #111827;
+    padding: 10px 16px;
+}
+
+.btn_secondary:hover{
+    background-color: #d1d5db;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(17, 24, 39, 0.12);
 }
 
 .task_cell{

@@ -1,0 +1,19 @@
+<!-- extended from base.html -->
+{% extends 'base.html' %}
+
+<!-- title -->
+{% block title %} Register- {% endblock title %}
+
+<!-- body -->
+{% block body %}
+<!-- Register user -->
+<div class="add_task">
+    <h2>Create Account</h2>
+    <form action="/register" method="POST">
+        <input type="text" name="username" placeholder="Choose a username" required>
+        <input type="password" name="password" placeholder="Create a password" required>
+        <button type="submit">Register</button>
+    </form>
+</div>
+
+{% endblock body %}
