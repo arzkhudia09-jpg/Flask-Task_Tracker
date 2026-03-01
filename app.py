@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy import inspect, text
 
 # Flask app and database setup
 app = Flask(__name__)
@@ -38,12 +38,25 @@ class Task(db.Model):
         db.ForeignKey("user.id"),
         nullable=False
         )
+    completed = db.Column(db.Boolean, nullable=False, default=False)
 
 
     date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     def __repr__(self) -> str:
         return f"{self.sno} - {self.title} - {self.desc} - {self.date_created}"
+
+
+# Ensure tables exist before handling requests (helps avoid 500s on auth routes)
+with app.app_context():
+    db.create_all()
+    # Add new columns to existing SQLite DBs created before this field existed.
+    columns = {column["name"] for column in inspect(db.engine).get_columns("task")}
+    if "completed" not in columns:
+        db.session.execute(
+            text("ALTER TABLE task ADD COLUMN completed BOOLEAN NOT NULL DEFAULT 0")
+        )
+        db.session.commit()
 
 # ROUTES
 # User registration route
@@ -109,24 +122,64 @@ def home():
         db.session.commit()
         return redirect("/")
 
-    allTasks = Task.query.filter_by(user_id=session["user_id"]).all()
+    allTasks = Task.query.filter_by(user_id=session["user_id"], completed=False).all()
     return render_template("index.html", allTasks=allTasks)
+
+
+# Route for completed tasks display
+@app.route("/done")
+def done():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    done_tasks = Task.query.filter_by(user_id=session["user_id"], completed=True).all()
+    return render_template("done.html", done_tasks=done_tasks)
+
+
+# Route for pending tasks display
+@app.route("/pending")
+def pending():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    pending_tasks = Task.query.filter_by(user_id=session["user_id"], completed=False).all()
+    return render_template("pending.html", pending_tasks=pending_tasks)
 
 # Route for task update
 @app.route("/update/<int:sno>", methods=["GET", "POST"])
 def update(sno):
-    task = Task.query.filter_by(sno=sno).first()
+    if "user_id" not in session:
+        return redirect("/login")
+
+    task = Task.query.filter_by(sno=sno, user_id=session["user_id"]).first()
+    if task is None:
+        return "Task not found", 404
+
     if request.method == "POST":
         title = request.form["title"]
         desc = request.form["desc"]
 
-        task = Task.query.filter_by(sno=sno).first()
         task.title = title
         task.desc = desc
         db.session.add(task)
         db.session.commit()
         return redirect("/")
     return render_template("update.html", task=task)
+
+
+# Route for marking task as completed
+@app.route("/complete/<int:sno>", methods=["POST"])
+def complete(sno):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    task = Task.query.filter_by(sno=sno, user_id=session["user_id"]).first()
+    if task is None:
+        return "Task not found", 404
+
+    task.completed = True
+    db.session.commit()
+    return redirect("/")
 
 # Route for task deletion
 @app.route("/delete/<int:sno>", methods=["POST"])

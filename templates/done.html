@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %} Done- {% endblock title %}
+
+{% block body %}
+<section class="recent_tasks">
+    <h2>Completed Tasks</h2>
+    <div class="task_table">
+        <div class="task_row task_header">
+            <div class="task_cell">SNo</div>
+            <div class="task_cell">Title</div>
+            <div class="task_cell">Description</div>
+            <div class="task_cell">Time Created</div>
+            <div class="task_cell">Status</div>
+        </div>
+        <ul class="task_list">
+            {% if done_tasks %}
+            {% for task in done_tasks %}
+            <li class="task_row">
+                <div class="task_cell">{{ loop.index }}</div>
+                <div class="task_cell">{{ task.title }}</div>
+                <div class="task_cell">{{ task.desc }}</div>
+                <div class="task_cell">{{ task.date_created }}</div>
+                <div class="task_cell">
+                    <span class="btn btn_done">Completed</span>
+                </div>
+            </li>
+            {% endfor %}
+            {% else %}
+            <li class="task_row task_empty">
+                <div class="task_cell" aria-live="polite">No completed tasks yet.</div>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+</section>
+{% endblock body %}

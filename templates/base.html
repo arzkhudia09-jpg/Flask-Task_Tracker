@@ -16,17 +16,18 @@
         <h1 class="logo"><a href="/">TODO</a></h1>
         <ul id="nav_element">
             <li class="nav_element"><a href="/">Home</a></li>
-            <li class="nav_element"><a href="/done">Done</a></li>
+            <li class="nav_element"><a href="/done">Completed</a></li>
             <li class="nav_element"><a href="/pending">Pending</a></li>
-            <li class="nav_element"><a href="/update">Update</a></li>
             {% if session.get("user_id") %}
             <li class="nav_element"><a href="/logout">Logout</a></li>
             {% endif %}
         </ul>
     </nav>
-    {% block body %}
+    <main class="page_shell">
+        {% block body %}
 
-    {% endblock body %}
+        {% endblock body %}
+    </main>
 
 </body>
 
