@@ -1,71 +1,43 @@
-# Flask TODO Application
+# Flask Task Tracker
 
-A task management web app built with Flask and SQLAlchemy, now with user authentication and task status flows (Pending and Done).
+Task tracking web app built with Flask + SQLAlchemy, including authentication and pending/done task flows.
 
 ## Features
 
 - User registration and login with hashed passwords
-- Session-based authentication and logout
-- Add new tasks
-- Update existing tasks
-- Delete tasks
-- Mark tasks as completed
-- Separate views for:
-- Pending tasks (`/pending`)
-- Completed tasks (`/done`)
-- Task timestamps (`date_created`)
-- Responsive, modern custom UI
-- PRG pattern (POST -> Redirect -> GET) on form submissions
+- Session-based authentication
+- Add, update, complete, and delete tasks
+- Separate pending and completed pages
+- Health check route: `/healthz`
 
 ## Tech Stack
 
-### Python and backend framework
-
 - Python 3.x
-- Flask `3.1.2`
-- Flask-SQLAlchemy `3.1.1`
-- SQLAlchemy `2.0.46`
-- Werkzeug `3.1.5`
-- Jinja2 `3.1.6`
-- SQLite (default local database)
-- Gunicorn `25.0.2` (optional production server)
-
-### CSS framework and frontend styling
-
-- CSS framework used: **None**
-- Styling approach: **Custom vanilla CSS** (`static/css/style.css`)
-- Template engine: Jinja2 templates in `templates/`
-- Fonts: Google Fonts (`Manrope`, `Space Grotesk`)
+- Flask
+- Flask-SQLAlchemy / SQLAlchemy
+- PostgreSQL (Neon) or SQLite (local fallback)
+- Gunicorn for production serving
 
 ## Project Structure
 
 ```text
-05_Flask/
+Flask-Task_Tracker/
 |-- app.py
 |-- requirements.txt
-|-- README.md
-|-- instance/
-|   `-- tasks.db
+|-- start.sh
+|-- .env.example
 |-- static/
-|   `-- css/
-|       `-- style.css
-`-- templates/
-    |-- base.html
-    |-- index.html
-    |-- pending.html
-    |-- done.html
-    |-- update.html
-    |-- login.html
-    `-- register.html
+|-- templates/
+`-- instance/
 ```
 
-## Setup and Run
+## Local Development
 
-1. Create and activate a virtual environment
+1. Create and activate virtual environment
 
 ```powershell
-python -m venv env
-.\env\Scripts\Activate.ps1
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 ```
 
 2. Install dependencies
@@ -74,32 +46,52 @@ python -m venv env
 pip install -r requirements.txt
 ```
 
-3. Run the app
+3. Set environment variables (PowerShell example)
+
+```powershell
+$env:FLASK_ENV="development"
+$env:FLASK_DEBUG="1"
+$env:SECRET_KEY="dev-secret"
+$env:DATABASE_URL="sqlite:///tasks.db"
+```
+
+4. Run app
 
 ```powershell
 python app.py
 ```
 
-4. Open in browser
+App runs at `http://127.0.0.1:5000`.
 
-```text
-http://127.0.0.1:5000
+## Deployment (Neon + Gunicorn)
+
+Set these required environment variables in your hosting platform:
+
+- `SECRET_KEY` (required in production)
+- `DATABASE_URL` (your Neon PostgreSQL connection string)
+- `FLASK_ENV=production`
+- `PORT` (provided by most platforms automatically)
+
+Optional Gunicorn tuning:
+
+- `GUNICORN_WORKERS` (default `2`)
+- `GUNICORN_THREADS` (default `4`)
+- `GUNICORN_TIMEOUT` (default `120`)
+
+Start command:
+
+```bash
+bash start.sh
 ```
 
-## Main Routes
+or directly:
 
-- `GET, POST /register` - Register user
-- `GET, POST /login` - Login user
-- `GET /logout` - Logout user
-- `GET, POST /` - Add and view pending tasks
-- `GET /pending` - Pending tasks page
-- `GET /done` - Completed tasks page
-- `GET, POST /update/<int:sno>` - Update task
-- `POST /complete/<int:sno>` - Mark task completed
-- `POST /delete/<int:sno>` - Delete task
+```bash
+gunicorn app:app --bind 0.0.0.0:$PORT
+```
 
-## Notes
+## Important Notes
 
-- Database is created automatically at startup.
-- Existing databases are auto-updated to include the `completed` column if missing.
-- For production, set a strong `SECRET_KEY` environment variable.
+- Never commit real credentials; use environment variables.
+- Database tables are created at startup.
+- `SECRET_KEY` is enforced for production.

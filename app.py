@@ -1,19 +1,36 @@
+import os
+from sqlalchemy import inspect, text
 from flask import Flask, render_template, request, redirect, session
 from flask_sqlalchemy import SQLAlchemy
-import os
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy import inspect, text
 
 # Flask app and database setup
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-key") #
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get(
-    "DATABASE_URL", "sqlite:///tasks.db"  # fallback for local dev
-)
+
+ENV = os.environ.get("FLASK_ENV", "development").lower()
+IS_PRODUCTION = ENV == "production"
+
+secret_key = os.environ.get("SECRET_KEY")
+if IS_PRODUCTION and not secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is required in production.")
+app.secret_key = secret_key or "dev-secret-key"
+
+database_url = os.environ.get("DATABASE_URL", "sqlite:///tasks.db")
+# Some platforms still provide postgres:// URLs.
+database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_pre_ping": True,
+}
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = IS_PRODUCTION
 db = SQLAlchemy(app)
 
-# MODELS 
+
+# MODELS
 # Authentication model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -25,7 +42,7 @@ class User(db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
 
 # Database model
 class Task(db.Model):
@@ -33,13 +50,8 @@ class Task(db.Model):
     title = db.Column(db.String(200), nullable=False)
     desc = db.Column(db.String(500), nullable=False)
 
-    user_id = db.Column(
-        db.Integer,
-        db.ForeignKey("user.id"),
-        nullable=False
-        )
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
-
 
     date_created = db.Column(db.DateTime, default=db.func.current_timestamp())
 
@@ -58,7 +70,14 @@ with app.app_context():
         )
         db.session.commit()
 
+
 # ROUTES
+# Health check route for load balancers and uptime checks.
+@app.route("/healthz")
+def healthz():
+    return {"status": "ok"}, 200
+
+
 # User registration route
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -78,6 +97,7 @@ def register():
             return redirect("/login")
 
     return render_template("register.html", error=error)
+
 
 # Login route
 @app.route("/login", methods=["GET", "POST"])
@@ -99,6 +119,7 @@ def login():
 
     return render_template("login.html")
 
+
 # Logout route
 @app.route("/logout")
 def logout():
@@ -112,7 +133,7 @@ def home():
 
     if "user_id" not in session:
         return redirect("/login")
-    
+
     if request.method == "POST":
         title = request.form["title"]
         desc = request.form["desc"]
@@ -142,8 +163,11 @@ def pending():
     if "user_id" not in session:
         return redirect("/login")
 
-    pending_tasks = Task.query.filter_by(user_id=session["user_id"], completed=False).all()
+    pending_tasks = Task.query.filter_by(
+        user_id=session["user_id"], completed=False
+    ).all()
     return render_template("pending.html", pending_tasks=pending_tasks)
+
 
 # Route for task update
 @app.route("/update/<int:sno>", methods=["GET", "POST"])
@@ -181,6 +205,7 @@ def complete(sno):
     db.session.commit()
     return redirect("/")
 
+
 # Route for task deletion
 @app.route("/delete/<int:sno>", methods=["POST"])
 def delete(sno):
@@ -195,4 +220,7 @@ def delete(sno):
 
 # Run the app
 if __name__ == "__main__":
-    app.run(debug=True)
+    debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+    host = os.environ.get("FLASK_RUN_HOST", "0.0.0.0")
+    port = int(os.environ.get("PORT", "5000"))
+    app.run(host=host, port=port, debug=debug_mode)
