@@ -13,6 +13,7 @@ IS_PRODUCTION = ENV == "production"
 secret_key = os.environ.get("SECRET_KEY")
 if IS_PRODUCTION and not secret_key:
     raise RuntimeError("SECRET_KEY environment variable is required in production.")
+
 app.secret_key = secret_key or "dev-secret-key"
 
 database_url = os.environ.get("DATABASE_URL", "sqlite:///tasks.db")
