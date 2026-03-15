@@ -11,9 +11,9 @@ ENV = os.environ.get("FLASK_ENV", "development").lower()
 IS_PRODUCTION = ENV == "production"
 
 secret_key = os.environ.get("SECRET_KEY")
-# if IS_PRODUCTION and not secret_key:
-#     raise RuntimeError("SECRET_KEY environment variable is required in production.")
-# app.secret_key = secret_key or "dev-secret-key"
+if IS_PRODUCTION and not secret_key:
+    raise RuntimeError("SECRET_KEY environment variable is required in production.")
+app.secret_key = secret_key or "dev-secret-key"
 
 database_url = os.environ.get("DATABASE_URL", "sqlite:///tasks.db")
 # Some platforms still provide postgres:// URLs.
@@ -21,9 +21,7 @@ database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_pre_ping": True,
-}
+
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = IS_PRODUCTION
@@ -227,4 +225,4 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
     host = os.environ.get("FLASK_RUN_HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "5000"))
-    app.run(host=host, port=port, debug=debug_mode)
+    app.run(host=host, port=port, debug=True)
